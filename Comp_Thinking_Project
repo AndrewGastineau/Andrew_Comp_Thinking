@@ -1,13 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Dec  6 10:29:01 2019
+@author: thomasdyra
+"""
+
 from bs4 import BeautifulSoup 
 import requests
 import time
 import pandas as pd
 import matplotlib.pyplot as plt
 
-
 def top_box_office():
  
-    url = "https://www.rottentomatoes.com/"
+    url = "https://www.rottentomatoes.com/browse/box-office/"
     
     response = requests.get(url)
     
@@ -15,8 +21,8 @@ def top_box_office():
     
     soup = BeautifulSoup(html_doc, "lxml")
     
-    table = soup.find('table', id='Top-Box-Office')
-    table_rows = table.find_all('tr', class_='sidebarInTheaterOpening')
+    table = soup.find('table', class_='center table')
+    table_rows = table.find_all('tr', itemprop='itemListElement')
     row =[]
     for tr in table_rows:
         td = tr.find_all('td')
@@ -26,22 +32,38 @@ def top_box_office():
     return row
 
 
-
-
 def create_dataframe(list):
     for i in list:
        
         dataframe_= pd.DataFrame(list[0:], columns=list[0])
-        dataframe_.columns = ['Rating','Title','Revenue']
+        dataframe_.columns = ['this week', 'lastweek', 't_meter', 'title', 'weeks released','weekend gross','total gross', 'theater avg', '# of theater']
         
         
         
     return dataframe_
-        
+
+
+def clean_dataframe(y):
+    columns = y.columns
+    y[columns] = y[columns].replace({'%':''}, regex = True)
+    y[columns] = y[columns].replace({'No Score Yet':'0'}, regex = True)
+
+    return y 
+
+
+def numeric_data(f):
+    t=f.t_meter
+    j=pd.to_numeric(t, errors = 'ignore', downcast = 'integer')
+    
+    return j
+
+
+def fresh_movies(j):
    
-
- 
-
+    
+    for i in j:
+        if i >= 60:
+            return (j)
     
 
     
@@ -53,6 +75,22 @@ x = top_box_office()
 print(x)
 y=create_dataframe(x)
 print(y)
+
+
+x = top_box_office()
+print(x)
+y=create_dataframe(x)
+print(y)
+
+f = clean_dataframe(y)
+print(f)
+
+
+j = numeric_data(f)
+print(j)
+j.plot()
+j.plot(kind='bar', x = 'title', y = j)
+h= fresh_movies(j)
 
 
 
